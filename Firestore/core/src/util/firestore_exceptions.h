@@ -27,7 +27,9 @@
 
 #include "Firestore/core/include/firebase/firestore/firestore_errors.h"
 
+#if !defined(__ANDROID__)
 #include "absl/base/config.h"
+#endif  // !defined(__ANDROID__)
 
 #if ABSL_HAVE_EXCEPTIONS
 #define FIRESTORE_HAVE_EXCEPTIONS 1
