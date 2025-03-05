@@ -42,7 +42,7 @@ NSString* FIRCLSApplicationGetBundleIdentifier(void);
 NSString* FIRCLSApplicationGetSDKBundleID(void);
 
 /**
- * Returns the platform identifier, either: ios, mac, or tvos.
+ * Returns the platform identifier, either: ios, mac, or tvOS.
  * Catalyst apps are treated as mac.
  * This is a legacy function, for platform identification please use
  * FIRCLSApplicationGetFirebasePlatform.

@@ -98,17 +98,6 @@
     ABTExperimentPayloadExperimentOverflowPolicy overflowPolicy =
         [self overflowPolicyWithPayload:payload originalPolicy:policy];
     id experimentToClear = experiments.firstObject;
-    if (overflowPolicy == ABTExperimentPayloadExperimentOverflowPolicyDiscardOldest &&
-        experimentToClear) {
-      NSString *expID = [self experimentIDOfExperiment:experimentToClear];
-      NSString *varID = [self variantIDOfExperiment:experimentToClear];
-
-      [self clearExperiment:expID variantID:varID withOrigin:origin payload:payload events:events];
-      FIRLogDebug(kFIRLoggerABTesting, @"I-ABT000016",
-                  @"Clear experiment ID %@ variant ID %@ due to "
-                  @"overflow policy.",
-                  expID, varID);
-
     } else {
       FIRLogDebug(kFIRLoggerABTesting, @"I-ABT000017",
                   @"Experiment ID %@ variant ID %@ won't be set due to "
@@ -116,6 +105,22 @@
                   payload.experimentId, payload.variantId);
 
       return;
+    }
+  }
+
+  // Clear experiment if other variant ID exists.
+  NSString *experimentID = payload.experimentId;
+  NSString *variantID = payload.variantId;
+  for (id experiment in experiments) {
+    NSString *expID = [self experimentIDOfExperiment:experiment];
+    NSString *varID = [self variantIDOfExperiment:experiment];
+    if ([expID isEqualToString:experimentID] && ![varID isEqualToString:variantID]) {
+      FIRLogDebug(kFIRLoggerABTesting, @"I-ABT000018",
+                  @"Clear experiment ID %@ with variant ID %@ because "
+                  @"only one variant ID can be existed "
+                  @"at any time.",
+                  expID, varID);
+      [self clearExperiment:expID variantID:varID withOrigin:origin payload:payload events:events];
     }
   }
 
@@ -213,6 +218,7 @@
                                                                         params:eventParams];
   [experiment setValue:expiredEvent forKey:kABTExperimentDictionaryExpiredEventKey];
   return experiment;
+}
 }
 
 - (NSDictionary<NSString *, id> *)

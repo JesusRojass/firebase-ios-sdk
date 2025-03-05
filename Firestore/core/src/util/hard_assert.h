@@ -76,7 +76,7 @@
 
 /**
  * Indicates an area of the code that cannot be reached (except possibly due to
- * undefined behaviour or other similar badness). The only reasonable thing to
+ * undefined behaviour or other similar badness). The only reasonable thing to do in these cases
  * do in these cases is to immediately abort.
  */
 #define UNREACHABLE() abort()

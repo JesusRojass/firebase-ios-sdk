@@ -621,7 +621,7 @@ BOOL FIRMessagingIsContextManagerMessage(NSDictionary *message) {
     FIRMessagingLoggerWarn(kFIRMessagingMessageCodeTokenDelegateMethodsNotImplemented,
                            @"The object %@ does not respond to "
                            @"-messaging:didReceiveRegistrationToken:. Please implement "
-                           @"-messaging:didReceiveRegistrationToken: to be provided with an FCM "
+                           @"-messaging:didReceiveRegistrationToken: to be provided with a FCM "
                            @"token.",
                            self.delegate.description);
   }
