@@ -17,6 +17,7 @@
 import UIKit
 
 import FirebaseAppCheck
+import FirebaseAuth
 import FirebaseCore
 
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -27,15 +28,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     AppCheck.setAppCheckProviderFactory(providerFactory)
 
     FirebaseApp.configure()
+    Auth.auth().signInAnonymously { result, error in
+      if let error {
+        print(error.localizedDescription)
+      } else {
+        print(result!)
+      }
+    }
+//    requestLimitedUseToken()
 
-    requestLimitedUseToken()
-
-    requestDeviceCheckToken()
+//    requestDeviceCheckToken()
 
     requestDebugToken()
 
     if #available(iOS 14.0, *) {
-      requestAppAttestToken()
+//      requestAppAttestToken()
     }
 
     return true

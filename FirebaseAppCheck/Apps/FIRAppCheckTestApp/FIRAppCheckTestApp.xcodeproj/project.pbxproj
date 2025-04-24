@@ -15,6 +15,8 @@
 		EAD122F12DB98BD0004D64C9 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAD122F02DB98BCC004D64C9 /* ContentView.swift */; };
 		EAD122F32DB9920D004D64C9 /* AppCheckTestApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAD122F22DB99206004D64C9 /* AppCheckTestApp.swift */; };
 		EAD122F62DB9940E004D64C9 /* FirebaseAppCheck in Frameworks */ = {isa = PBXBuildFile; productRef = EAD122F52DB9940E004D64C9 /* FirebaseAppCheck */; };
+		EAD122F92DB9944B004D64C9 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = EAD122F82DB9944B004D64C9 /* FirebaseStorage */; };
+		EAD123312DBAC235004D64C9 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = EAD123302DBAC235004D64C9 /* FirebaseAuth */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -35,6 +37,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				EAD122F62DB9940E004D64C9 /* FirebaseAppCheck in Frameworks */,
+				EAD123312DBAC235004D64C9 /* FirebaseAuth in Frameworks */,
+				EAD122F92DB9944B004D64C9 /* FirebaseStorage in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -45,6 +49,7 @@
 			isa = PBXGroup;
 			children = (
 				9AC7C27A2541C7E500F5DD80 /* FIRAppCheckTestApp */,
+				EAD122F72DB9944B004D64C9 /* Frameworks */,
 				9AC7C2792541C7E500F5DD80 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -70,6 +75,13 @@
 				9AC7C2892541C7E600F5DD80 /* Info.plist */,
 			);
 			path = FIRAppCheckTestApp;
+			sourceTree = "<group>";
+		};
+		EAD122F72DB9944B004D64C9 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -358,6 +370,16 @@
 		EAD122F52DB9940E004D64C9 /* FirebaseAppCheck */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = FirebaseAppCheck;
+		};
+		EAD122F82DB9944B004D64C9 /* FirebaseStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EAD122F42DB9940E004D64C9 /* XCLocalSwiftPackageReference "../../../../firebase-ios-sdk" */;
+			productName = FirebaseStorage;
+		};
+		EAD123302DBAC235004D64C9 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EAD122F42DB9940E004D64C9 /* XCLocalSwiftPackageReference "../../../../firebase-ios-sdk" */;
+			productName = FirebaseAuth;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
