@@ -19,6 +19,13 @@
 #include <string>
 #include <utility>
 
+// 💥 Doesnt work!
+//@import FirebaseFirestoreInternalSwift; // Use of '@import' when C++ modules are disabled, consider using -fmodules and -fcxx-modules
+//
+// And we cannot import the generated `-Swift` because  https://github.com/swiftlang/swift-package-manager/issues/7099
+// But, we can import an ObjC file
+#include "Firestore/Source/API/FIRFooWrapper.h"
+
 #include "Firestore/Protos/nanopb/google/firestore/v1/document.nanopb.h"
 #include "Firestore/Source/API/FIRDocumentReference+Internal.h"
 #include "Firestore/Source/API/FIRFieldValue+Internal.h"
@@ -77,6 +84,11 @@ NS_ASSUME_NONNULL_BEGIN
     _serverTimestampBehavior = serverTimestampBehavior;
   }
   return self;
+}
+
+- (void)example:(FIRFooWrapper *)fooWrapper {
+  [fooWrapper doStuff];
+  // Calls into ObjC fooWrapper definition, which calls into source-of-truth Swift module
 }
 
 - (id)convertedValue:(const google_firestore_v1_Value &)value {

@@ -18,9 +18,15 @@
 
 #include "Firestore/Source/Public/FirebaseFirestore/FIRVectorValue.h"
 
+@import FirebaseFirestoreInternalSwift;
+
 NS_ASSUME_NONNULL_BEGIN
 
 @implementation FIRVectorValue
+
+- (void)example {
+  [[[FIRFoo alloc] init] doStuff];
+}
 
 - (instancetype)initWithArray:(NSArray<NSNumber *> *)array {
   if (self = [super init]) {

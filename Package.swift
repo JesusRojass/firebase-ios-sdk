@@ -1429,9 +1429,11 @@ func firestoreWrapperTarget() -> Target {
 func firestoreTargets() -> [Target] {
   if ProcessInfo.processInfo.environment["FIREBASE_SOURCE_FIRESTORE"] != nil {
     return [
+      .target(name: "FirebaseFirestoreInternalSwift", path: "FirebaseFirestoreInternalSwift"),
       .target(
         name: "FirebaseFirestoreInternalWrapper",
         dependencies: [
+          "FirebaseFirestoreInternalSwift",
           "FirebaseAppCheckInterop",
           "FirebaseCore",
           "leveldb",
@@ -1503,6 +1505,7 @@ func firestoreTargets() -> [Target] {
           "FirebaseCoreExtension",
           "FirebaseFirestoreInternalWrapper",
           "FirebaseSharedSwift",
+          "FirebaseFirestoreInternalSwift",
         ],
         path: "Firestore",
         exclude: [

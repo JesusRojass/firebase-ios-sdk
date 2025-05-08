@@ -14,6 +14,8 @@
 
 #if SWIFT_PACKAGE
   @_exported import FirebaseFirestoreInternalWrapper
+  // This re-exports the public API from here in the FirebaseFirestore namespace.
+  @_exported import FirebaseFirestoreInternalSwift
 #else
   @_exported import FirebaseFirestoreInternal
 #endif // SWIFT_PACKAGE
@@ -28,5 +30,11 @@
 // clients and is therefore unavailable in a Swift context.
 @available(*, unavailable)
 @objc public extension Firestore {
+  static var __no_op: () -> Void { {} }
+}
+
+// Maybe needed, would have to dig deeper.
+@available(*, unavailable)
+@objc public extension Foo {
   static var __no_op: () -> Void { {} }
 }
