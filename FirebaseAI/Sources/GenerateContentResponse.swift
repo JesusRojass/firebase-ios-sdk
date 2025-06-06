@@ -357,7 +357,10 @@ extension GenerateContentResponse.UsageMetadata: Decodable {
   public init(from decoder: any Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     promptTokenCount = try container.decodeIfPresent(Int.self, forKey: .promptTokenCount) ?? 0
-    cachedContentTokenCount = try container.decodeIfPresent(Int.self, forKey: .cacheContentTokenCount) ?? 0
+    cachedContentTokenCount = try container.decodeIfPresent(
+      Int.self,
+      forKey: .cacheContentTokenCount
+    ) ?? 0
     candidatesTokenCount =
       try container.decodeIfPresent(Int.self, forKey: .candidatesTokenCount) ?? 0
     thoughtsTokenCount = try container.decodeIfPresent(Int.self, forKey: .thoughtsTokenCount) ?? 0
