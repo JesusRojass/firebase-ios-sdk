@@ -315,7 +315,7 @@ public struct GroundingMetadata: Sendable {
   /// These can be used to allow users to explore the search results themselves.
   public let webSearchQueries: [String]
   /// A list of ``GroundingChunk`` structs. Each chunk represents a piece of retrieved content
-  /// (e.g., from a web page) that the model used to ground its response.
+  /// that the model used to ground its response.
   public let groundingChunks: [GroundingChunk]
   /// A list of ``GroundingSupport`` structs. Each object details how specific segments of the
   /// model's response are supported by the `groundingChunks`.
