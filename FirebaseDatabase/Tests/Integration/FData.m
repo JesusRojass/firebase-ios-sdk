@@ -2263,25 +2263,102 @@ XCTAssertTrue([target isEqualTo:recvd], @"Expected %@ to match %@", target, recv
           ready = YES;
         }];
 
-  [self waitUntil:^BOOL {
-    return ready;
-  }];
-  ready = NO;
+  NSLog(@"[%@] Starting testDeepUpdatesWork", [NSDate date]);
+  XCTestExpectation *initialSetExpectation = [self expectationWithDescription:@"Initial setValue completes"];
+  XCTestExpectation *updateExpectation = [self expectationWithDescription:@"updateChildValues completes"];
+  XCTestExpectation *readerExpectation = [self expectationWithDescription:@"Reader receives value"];
+  XCTestExpectation *localSnapExpectation = [self expectationWithDescription:@"LocalSnap receives final value"];
 
+  __block BOOL initialSetDone = NO;
+
+  NSDictionary *initialData = @{@"a" : @{@"aa" : @1, @"ab" : @2}};
+  NSDictionary *updateData = @{
+    @"a/aa" : @10,
+    @".priority" : @3.0,
+    @"a/ab" : @{@".priority" : @2.0, @".value" : @20}
+  };
+  NSDictionary *expectedReaderValue = @{@"a" : @{@"aa" : @10, @"ab" : @20}};
+
+  // Observe localSnap for the final state
+  // We need to see two distinct values for localSnap: initial set and after update.
+  __block int localSnapUpdateCount = 0;
+  NSDictionary *expectedInitialLocalValue = @{@"a" : @{@"aa" : @1, @"ab" : @2}};
+  NSDictionary *expectedFinalLocalValue = @{@"a" : @{@"aa" : @10, @"ab" : @20}};
+
+  [writer observeEventType:FIRDataEventTypeValue
+                 withBlock:^(FIRDataSnapshot *snapshot) {
+                   localSnap = snapshot;
+                   NSDictionary *currentValue = [snapshot value];
+                   NSLog(@"[%@] localSnap received value: %@", [NSDate date], currentValue);
+                   if (!initialSetDone) {
+                     if ([currentValue isEqualToDictionary:expectedInitialLocalValue]) {
+                        NSLog(@"[%@] localSnap matched initial expected value.", [NSDate date]);
+                     }
+                   } else {
+                     if ([currentValue isEqualToDictionary:expectedFinalLocalValue]) {
+                       localSnapUpdateCount++;
+                       NSLog(@"[%@] localSnap matched final expected value (count: %d).", [NSDate date], localSnapUpdateCount);
+                       if (localSnapUpdateCount >= 1) {
+                           NSLog(@"[%@] Fulfilling localSnapExpectation.", [NSDate date]);
+                           [localSnapExpectation fulfill];
+                       }
+                     }
+                   }
+                 }];
+
+  NSLog(@"[%@] Performing initial setValue with: %@", [NSDate date], initialData);
+  [writer setValue:initialData
+      withCompletionBlock:^(NSError *error, FIRDatabaseReference *ref) {
+        if (error) {
+            NSLog(@"[%@] ERROR during initial setValue: %@", [NSDate date], error);
+        } else {
+            NSLog(@"[%@] Initial setValue completed.", [NSDate date]);
+        }
+        XCTAssertNil(error, @"Error during initial setValue");
+        initialSetDone = YES;
+        [initialSetExpectation fulfill];
+      }];
+
+  NSLog(@"[%@] Waiting for initialSetExpectation.", [NSDate date]);
+  [self waitForExpectations:@[initialSetExpectation] timeout:kFirebaseTestTimeout];
+  NSLog(@"[%@] initialSetExpectation fulfilled.", [NSDate date]);
+
+  NSLog(@"[%@] Performing updateChildValues with: %@", [NSDate date], updateData);
+  [writer updateChildValues:updateData
+        withCompletionBlock:^(NSError *error, FIRDatabaseReference *ref) {
+          if (error) {
+            NSLog(@"[%@] ERROR during updateChildValues: %@", [NSDate date], error);
+          } else {
+            NSLog(@"[%@] updateChildValues completed.", [NSDate date]);
+          }
+          XCTAssertNil(error, @"Error during updateChildValues");
+          [updateExpectation fulfill];
+        }];
+
+  NSLog(@"[%@] Setting up reader observeSingleEventOfType.", [NSDate date]);
   [reader observeSingleEventOfType:FIRDataEventTypeValue
                          withBlock:^(FIRDataSnapshot *snapshot) {
                            NSDictionary *result = [snapshot value];
-                           NSDictionary *expected = @{@"a" : @{@"aa" : @10, @"ab" : @20}};
-                           XCTAssertTrue([result isEqualToDictionary:expected],
-                                         @"Should get new value");
-                           ready = YES;
+                           NSLog(@"[%@] Reader received value: %@", [NSDate date], result);
+                           XCTAssertNotNil(result, @"Reader received nil snapshot value.");
+                           XCTAssertFalse([result isKindOfClass:[NSNull class]], @"Reader received NSNull value. Expected: %@", expectedReaderValue);
+                           XCTAssertTrue([result isKindOfClass:[NSDictionary class]], @"Reader did not receive a dictionary. Expected: %@, Got: %@", expectedReaderValue, [result class]);
+
+                           XCTAssertTrue([result isEqualToDictionary:expectedReaderValue],
+                                         @"Reader: Should get new value. Expected %@, got %@", expectedReaderValue, result);
+                           NSLog(@"[%@] Fulfilling readerExpectation.", [NSDate date]);
+                           [readerExpectation fulfill];
                          }];
 
-  [self waitUntil:^BOOL {
-    NSDictionary *result = [localSnap value];
-    NSDictionary *expected = @{@"a" : @{@"aa" : @10, @"ab" : @20}};
-    return ready && [result isEqualToDictionary:expected];
-  }];
+  NSLog(@"[%@] Waiting for updateExpectation, readerExpectation, localSnapExpectation.", [NSDate date]);
+  [self waitForExpectations:@[updateExpectation, readerExpectation, localSnapExpectation] timeout:kFirebaseTestTimeout];
+  NSLog(@"[%@] All expectations fulfilled.", [NSDate date]);
+
+  NSDictionary *finalLocalValue = [localSnap value];
+  NSLog(@"[%@] Final localSnap value for assertion: %@", [NSDate date], finalLocalValue);
+  XCTAssertTrue([finalLocalValue isEqualToDictionary:expectedFinalLocalValue],
+                @"Final localSnap value should match expected. Expected %@, got %@", expectedFinalLocalValue, finalLocalValue);
+  NSLog(@"[%@] testDeepUpdatesWork finished.", [NSDate date]);
 }
 
 // Type signature means we don't need a test for updating scalars. They wouldn't compile
