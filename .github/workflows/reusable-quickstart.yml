@@ -1,0 +1,67 @@
+name: Reusable Quickstart Test
+
+on:
+  workflow_call:
+    inputs:
+      quickstart-name:
+        required: true
+        type: string
+      legacy:
+        required: false
+        type: boolean
+        default: false
+      runs-on:
+        required: true
+        type: string
+      test-command:
+        required: true
+        type: string
+      extra-setup-command:
+        required: false
+        type: string
+      post-test-command:
+        required: false
+        type: string
+      xcode-version:
+        required: false
+        type: string
+    secrets:
+      GHASecretsGPGPassphrase1:
+        required: true
+      RELEASE_TESTING_PAT:
+        required: true
+
+jobs:
+  quickstart:
+    runs-on: ${{ inputs.runs-on }}
+    env:
+      plist_secret: ${{ secrets.GHASecretsGPGPassphrase1 }}
+      signin_secret: ${{ secrets.GHASecretsGPGPassphrase1 }}
+      botaccess: ${{ secrets.RELEASE_TESTING_PAT }}
+      LEGACY: ${{ inputs.legacy }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: ruby/setup-ruby@v1
+    - name: Select Xcode version
+      if: ${{ inputs.xcode-version }}
+      run: sudo xcode-select -s /Applications/Xcode_${{ inputs.xcode-version }}.app/Contents/Developer
+    - name: Setup testing repo and quickstart
+      run: BOT_TOKEN="${{ secrets.RELEASE_TESTING_PAT }}" scripts/setup_quickstart.sh ${{ inputs.quickstart-name }} nightly_release_testing
+    - name: Extra setup
+      if: ${{ inputs.extra-setup-command }}
+      run: ${{ inputs.extra-setup-command }}
+    - name: Install Secret GoogleService-Info.plist
+      run: scripts/decrypt_gha_secret.sh scripts/gha-encrypted/qs-${{ inputs.quickstart-name }}.plist.gpg quickstart-ios/${{ inputs.quickstart-name }}/GoogleService-Info.plist "$plist_secret"
+    - name: Test quickstart
+      run: ${{ inputs.test-command }}
+    - name: Post-test
+      if: ${{ inputs.post-test-command }}
+      run: ${{ inputs.post-test-command }}
+    - name: Remove data before upload
+      if: ${{ failure() }}
+      run: scripts/remove_data.sh ${{ inputs.quickstart-name }}
+    - uses: actions/upload-artifact@v4
+      if: ${{ failure() }}
+      with:
+        name: quickstart_artifacts_${{ inputs.quickstart-name }}
+        path: quickstart-ios/
