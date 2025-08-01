@@ -1,0 +1,50 @@
+name: Reusable Buildup SpecsReleasing Repo
+
+on:
+  workflow_call:
+    inputs:
+      pod_name:
+        description: 'The name of the pod.'
+        required: true
+        type: string
+      allow_warnings:
+        description: 'A boolean to indicate whether to allow warnings.'
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      bot_access_token:
+        required: true
+
+jobs:
+  build_spec:
+    if: github.repository == 'Firebase/firebase-ios-sdk' || github.event_name == 'workflow_dispatch'
+    runs-on: macos-15
+    env:
+      botaccess: ${{ secrets.bot_access_token }}
+      local_repo: specsreleasing
+      local_sdk_repo_dir: /tmp/test/firebase-ios-sdk
+      targeted_pod: ${{ inputs.pod_name }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/download-artifact@v4.1.7
+      with:
+        name: firebase-ios-sdk
+        path: ${{ env.local_sdk_repo_dir }}
+    - name: Update SpecsReleasing repo
+      run: |
+        [[ ${{ inputs.allow_warnings }} == true ]] && ALLOWWARNINGS=true
+        cd scripts/create_spec_repo/
+        swift build
+        pod repo add --silent "${local_repo}" https://"$botaccess"@github.com/Firebase/SpecsReleasing.git
+        # ${ALLOWWARNINGS:+--allow-warnings} will add --allow-warnings to the
+        # command if ${ALLOWWARNINGS} is not null.
+        BOT_TOKEN="${botaccess}" ${GITHUB_WORKSPACE}/scripts/third_party/travis/retry.sh .build/debug/spec-repo-builder \
+                                --sdk-repo "${local_sdk_repo_dir}" \
+                                --local-spec-repo-name "${local_repo}" \
+                                --pod-sources 'https://github.com/Firebase/SpecsReleasing' "https://github.com/firebase/SpecsStaging.git" "https://github.com/CocoaPods/Specs.git" \
+                                --include-pods "${targeted_pod}" \
+                                --keep-repo ${ALLOWWARNINGS:+--allow-warnings}
+    - name: Clean Artifacts
+      if: ${{ always() }}
+      run: pod repo remove "${local_repo}"

@@ -1,0 +1,96 @@
+name: Reusable Release Quickstart Test
+
+on:
+  workflow_call:
+    inputs:
+      product:
+        description: 'The product name (e.g., abtesting, auth).'
+        required: true
+        type: string
+      runs-on:
+        description: 'The runner to use (e.g., macos-14).'
+        required: true
+        type: string
+      legacy:
+        description: 'A boolean to indicate if it is a legacy quickstart.'
+        required: false
+        type: boolean
+        default: false
+      xcode-version:
+        description: 'Optional Xcode version.'
+        required: false
+        type: string
+      test-objc:
+        description: 'A boolean to indicate if obj-c tests should run.'
+        required: false
+        type: boolean
+        default: false
+      test-swift:
+        description: 'A boolean to indicate if swift tests should run.'
+        required: false
+        type: boolean
+        default: true
+      extra-setup:
+        description: 'A string for any extra setup commands.'
+        required: false
+        type: string
+    secrets:
+      plist_secret:
+        required: true
+      bot_access_token:
+        required: true
+
+
+jobs:
+  quickstart:
+    if: (github.repository == 'Firebase/firebase-ios-sdk' && github.event_name == 'schedule') || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    runs-on: ${{ inputs.runs-on }}
+    env:
+      plist_secret: ${{ secrets.plist_secret }}
+      botaccess: ${{ secrets.bot_access_token }}
+      LEGACY: ${{ inputs.legacy }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: ruby/setup-ruby@354a1ad156761f5ee2b7b13fa8e09943a5e8d252 # v1
+
+    - name: Select Xcode version
+      if: ${{ inputs.xcode-version != '' }}
+      run: sudo xcode-select -s /Applications/Xcode_${{ inputs.xcode-version }}.app/Contents/Developer
+
+    - name: Setup testing repo and quickstart
+      run: BOT_TOKEN="${{ secrets.bot_access_token }}" scripts/setup_quickstart.sh ${{ inputs.product }} nightly_release_testing
+
+    - name: Install Secret GoogleService-Info.plist
+      run: |
+        scripts/decrypt_gha_secret.sh \
+          scripts/gha-encrypted/qs-${{ inputs.product }}.plist.gpg \
+          quickstart-ios/${{ inputs.product }}/GoogleService-Info.plist \
+          "${{ secrets.plist_secret }}"
+
+    - name: Extra setup
+      if: ${{ inputs.extra-setup != '' }}
+      run: ${{ inputs.extra-setup }}
+
+    - name: Test objc quickstart
+      if: ${{ inputs.test-objc }}
+      run: |
+        ([ -z "${{ secrets.plist_secret }}" ] || \
+         scripts/third_party/travis/retry.sh scripts/test_quickstart.sh \
+           ${{ inputs.product }} ${{ inputs.legacy }})
+
+    - name: Test swift quickstart
+      if: ${{ inputs.test-swift }}
+      run: |
+        ([ -z "${{ secrets.plist_secret }}" ] || \
+         scripts/third_party/travis/retry.sh scripts/test_quickstart.sh \
+           ${{ inputs.product }} ${{ inputs.legacy }} swift)
+
+    - name: Remove data before upload
+      if: ${{ failure() }}
+      run: scripts/remove_data.sh ${{ inputs.product }}
+
+    - uses: actions/upload-artifact@v4
+      if: ${{ failure() }}
+      with:
+        name: quickstart_artifacts_${{ inputs.product }}
+        path: quickstart-ios/
