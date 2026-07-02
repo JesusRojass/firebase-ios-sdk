@@ -4,6 +4,23 @@ This file highlights key aspects of the development environment, coding practice
 architectural patterns covered in this repo. When an agents.md file is present in a product's
 subdirectory, prefer using the workflow defined there.
 
+## Repository-Specific Branch Sync Policy (This Repo Only)
+
+For this repository (`JesusRojass/firebase-ios-sdk` fork), when the user asks to sync branches
+(for example `sync all` or `sync <branch-name>`), agents must follow this strict policy:
+
+1. Do not create merge commits for sync.
+2. Do not rebase for sync.
+3. Do not force-push.
+4. Do not create agent-authored or agent-co-authored sync commits.
+5. Only perform fast-forward updates.
+6. If a branch cannot be fast-forwarded to the target, do not modify that branch. Report it as
+   requiring manual intervention instead.
+7. Always return a per-branch status summary including at minimum:
+   - whether it is in sync with upstream target branch
+   - commits ahead count
+   - commits behind count
+
 ## Setup Commands
 
 To contribute to or develop within the `firebase-ios-sdk` repository, an understanding of the
